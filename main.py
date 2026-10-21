@@ -8,10 +8,7 @@ from torchinfo import summary
 from thop import profile
 import matplotlib.pyplot as plt
 
-# ==========================================
-# 1. Dataset & DataLoaders
-# ==========================================
-print("--- 1. Loading Dataset ---")
+print(" Loading Dataset")
 transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.2860,), (0.3530,))
@@ -29,9 +26,8 @@ train_loader = DataLoader(train_dataset, batch_size=BATCH_SIZE, shuffle=True)
 val_loader = DataLoader(val_dataset, batch_size=BATCH_SIZE, shuffle=False)
 test_loader = DataLoader(test_dataset, batch_size=BATCH_SIZE, shuffle=False)
 
-# ==========================================
-# 2. Architectures (100k-150k params)
-# ==========================================
+# Architectures 
+
 class MLPModel(nn.Module):
     def __init__(self):
         super().__init__()
@@ -94,9 +90,9 @@ models = {
     "Attention": AttentionModel()
 }
 
-# ==========================================
-# 3. Profiling & Latency
-# ==========================================
+
+# Profiling 
+
 print("\n--- 3. Profiling & Cost Analysis ---")
 dummy_input = torch.randn(1, 1, 28, 28)
 model_stats = {}
@@ -137,9 +133,9 @@ for name, model in models.items():
     print(f"Params: {params:,.0f} | FLOPs/MACs: {macs:,.0f}")
     print(f"Latency B=1: {lat_b1:.3f} ms | Latency B=128: {lat_b128:.3f} ms")
 
-# ==========================================
-# 4. Training Loop
-# ==========================================
+
+# Loop
+
 print("\n--- 4. Training Models (5 Epochs Each) ---")
 def train_and_eval(model, train_loader, test_loader, epochs=5, lr=1e-3):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -172,9 +168,9 @@ for name, model in models.items():
     model_stats[name]["acc"] = acc
     print(f"{name} Test Accuracy: {acc * 100:.2f}%")
 
-# ==========================================
-# 5. Plotting Trade-offs
-# ==========================================
+
+# Plotting Trade-offs
+
 print("\n--- 5. Generating Plots ---")
 names = list(models.keys())
 accs = [model_stats[m]["acc"] for m in names]
@@ -183,7 +179,7 @@ latencies = [model_stats[m]["lat_b128"] for m in names]
 
 fig, ax = plt.subplots(1, 2, figsize=(12, 5))
 
-# Plot 1: Accuracy vs Parameters
+# Accuracy vs Parameters
 ax[0].scatter(params, accs, color='blue', s=100)
 for i, txt in enumerate(names):
     ax[0].annotate(f"{txt} ({accs[i]*100:.1f}%)", (params[i], accs[i]))
@@ -191,7 +187,7 @@ ax[0].set_xlabel('Parameter Count')
 ax[0].set_ylabel('Test Accuracy')
 ax[0].set_title('Accuracy vs Parameters')
 
-# Plot 2: Accuracy vs Latency
+#  Accuracy vs Latency
 ax[1].scatter(latencies, accs, color='green', s=100)
 for i, txt in enumerate(names):
     ax[1].annotate(f"{txt} ({accs[i]*100:.1f}%)", (latencies[i], accs[i]))
